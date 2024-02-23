@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<style>
+    :root {
+        --font: #eeffff;
+        --highlight: #13344f;
+        --iframe: #d6deeb;
+        --main: #011627;
+        --qc: #637777;
+        --sidebar: #011627;
+        --title: #7fdbca;
+    }
+    * {
+        background-color: var(--main);
+        border: 0;
+        color: var(--font);
+        font-family: monospace;
+        font-size: 16px;
+        margin: 0;
+        padding: 0;
+    }
+    a {
+        background-color: inherit;
+        color: var(--title);
+    }
+    body {
+        display: grid;
+        grid-template-columns: 1fr 728px 1fr;
+        min-height: 100vh;
+        transform-origin: top center;
+    }
+    iframe {
+        background-color: var(--iframe);
+        display: block;
+        margin: 0 auto;
+        width: 608px;
+    }
+    input {
+        background-color: #0b2942;
+        border: 1px solid #7fdbca;
+        padding: 3px;
+        position: fixed;
+        width: 300px;
+    }
+    #input-title {
+        bottom: 52px;
+        right: 20px;
+    }
+    #input-location {
+        bottom: 20px;
+        right: 20px;
+    }
+    li {
+        line-height: 1.666rem;
+        list-style: none;
+        padding-bottom: 0.75rem;
+        padding-left: 61px;
+        padding-right: 61px;
+        padding-top: 1.25rem;
+    }
+    li:hover {
+        background-color: var(--highlight) !important;
+    }
+    .qc {
+        color: var(--qc);
+        font-size: 11px;
+        line-height: 11px;
+        vertical-align: text-top;
+    }
+    .sidebar {
+        background-color: var(--sidebar);
+    }
+    span {
+        background-color: inherit;
+    }
+</style>
+<body>
+    <div class='sidebar'></div>
+    <div>
+        <input id='input-title' type='text' placeholder='title' oninput='filter_title(this.value)'>
+        <input id='input-location' type='text' placeholder='location' oninput='filter_location(this.value)'>
+        <ul></ul>
+    </div>
+    <div class='sidebar'></div>
+</body>
+<script>
+    'use strict';
+    const style = getComputedStyle(document.body);
+    const font_size = parseFloat(style.fontSize);
+    // zoom onload and onresize
+    function zoom() {
+        const max_scale = 1.5;
+        const max_width_rem = 56;
+        const dynamic_scale = Math.floor(
+            window.innerWidth / font_size / max_width_rem * 99) / 100;
+        document.body.style.scale =
+            Math.max(1, Math.min(max_scale, dynamic_scale));
+    }
+    //window.onload = zoom;
+    //window.onresize = zoom;
+    // insert jobs
+    const json_promise = fetch('/api/json').then(response => response.json());
+    json_promise.then(json => {
+        document.querySelector('ul').innerHTML =
+            json.reverse().map(job => li(job)).join('');
+    });
+    // filters
+    function filter_title(input) {
+        const todo = input.split('|');
+        json_promise.then(json => {
+            json.forEach(job => {
+                const iframe = document.getElementById(`iframe_${job.id}`);
+                if (input !== '' && todo.some(x => job.title.includes(x))) {
+                    iframe.style.display = 'none';
+                } else if (!job.hidden) {
+                    iframe.style.display = 'block';
+                }
+            })
+        });
+    }
+    function filter_location(input) {
+        const todo = input.split('|');
+        json_promise.then(json => {
+            json.forEach(job => {
+                const iframe = document.getElementById(`iframe_${job.id}`);
+                if (input !== '' && todo.some(x => job.location.includes(x))) {
+                    iframe.style.display = 'none';
+                } else if (!job.hidden) {
+                    iframe.style.display = 'block';
+                }
+            })
+        });
+    }
+    // assemble html
+    function li(job) {
+        const category = job.category.trim().replace(/ \|$/, '');
+        const keywords = job.keywords.replace(/,$/, '').replaceAll(',', ', ');
+        const modify_date = job.modify_date.split(' ')[1];
+        const post_date = job.post_date.split(' ')[1];
+        const qc = `<span class='qc'>id=${job.id} scrap=${job.scrap_date} modify=${modify_date} post=${post_date} height=${job.iframe_height} hide=${job.hidden}</span>`;
+        const iframe = `<iframe id='iframe_${job.id}' height='${job.iframe_height}' loading='lazy' scrolling='no' marginheight='0' marginwidth='0' src='https://gamejob.co.kr/Recruit/GI_Read_Comt_Ifrm?gno=${job.id}&v1'></iframe>`;
+        return `<li id='${job.id}' onclick='showhide(${job.id})'><a href='https://gamejob.co.kr/List_GI/GIB_Read.asp?GI_No=${job.id}'>${job.title}</a><br>${label('location')} ${job.location} ${label('subway')} ${job.subway}<br>${qc}<br>${iframe}</li>`;
+    }
+    // grey labels
+    function label(html) {
+        return `<span style='color: #abb2bf'>${html}</span>`;
+    }
+    // clickable <li>
+    function showhide(id) {
+        const li = document.getElementById(`${id}`);
+        const iframe = document.getElementById(`iframe_${id}`);
+        const iframe_top = iframe.getBoundingClientRect().top;
+        if (iframe_top < 0) {
+            window.scrollBy(0, iframe_top + font_size);
+        }
+        if (['block', ''].includes(iframe.style.display)) {
+            iframe.style.display = 'none';
+            json_promise.then(json => {
+                json.filter(job => job.id === `${id}`)[0].hidden = true;
+            });
+            li.innerHTML = li.innerHTML.replace('hide=false', 'hide=true');
+        } else {
+            iframe.style.display = 'block';
+            json_promise.then(json => {
+                json.filter(job => job.id === `${id}`)[0].hidden = false;
+            });
+            li.innerHTML = li.innerHTML.replace('hide=true', 'hide=false');
+        }
+    }
+</script>

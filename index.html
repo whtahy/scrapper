@@ -42,11 +42,11 @@
         position: fixed;
         width: 300px;
     }
-    #input-title {
+    #input_title {
         bottom: 52px;
         right: 20px;
     }
-    #input-location {
+    #input_location {
         bottom: 20px;
         right: 20px;
     }
@@ -77,8 +77,8 @@
 <body>
     <div class='sidebar'></div>
     <div>
-        <input id='input-title' type='text' placeholder='title' oninput='filter_title(this.value)'>
-        <input id='input-location' type='text' placeholder='location' oninput='filter_location(this.value)'>
+        <input id='input_title' type='text' placeholder='title' oninput='filter_title(this.value)'>
+        <input id='input_location' type='text' placeholder='location' oninput='filter_location(this.value)'>
         <ul></ul>
     </div>
     <div class='sidebar'></div>
@@ -87,6 +87,14 @@
     'use strict';
     const style = getComputedStyle(document.body);
     const font_size = parseFloat(style.fontSize);
+    window.onload = () => {
+        const t = localStorage.getItem('filter_title') ?? '';
+        document.getElementById('input_title').value = t;
+        filter_title(t);
+        const l = localStorage.getItem('filter_location') ?? '';
+        document.getElementById('input_location').value = l;
+        filter_location(l);
+    };
     // insert jobs
     const json_promise = fetch('/api/json').then(response => response.json());
     json_promise.then(json => {
@@ -95,11 +103,12 @@
     });
     // filters
     function filter_title(input) {
-        const todo = input.split('|');
+        localStorage.setItem('filter_title', input);
+        const todo = input.split('|').filter(x => x !== '');
         json_promise.then(json => {
             json.forEach(job => {
                 const iframe = document.getElementById(`iframe_${job.id}`);
-                if (input !== '' && todo.some(x => job.title.includes(x))) {
+                if (todo.some(x => job.title.includes(x))) {
                     iframe.style.display = 'none';
                 } else if (!job.hidden) {
                     iframe.style.display = 'block';
@@ -108,11 +117,12 @@
         });
     }
     function filter_location(input) {
-        const todo = input.split('|');
+        localStorage.setItem('filter_location', input);
+        const todo = input.split('|').filter(x => x !== '');
         json_promise.then(json => {
             json.forEach(job => {
                 const iframe = document.getElementById(`iframe_${job.id}`);
-                if (input !== '' && todo.some(x => job.location.includes(x))) {
+                if (todo.some(x => job.location.includes(x))) {
                     iframe.style.display = 'none';
                 } else if (!job.hidden) {
                     iframe.style.display = 'block';

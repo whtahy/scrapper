@@ -6,8 +6,8 @@ export const handler = async (event) => {
     console.log("start!");
     const browser = await playwright.launchChromium({ headless: true });
     const context = await browser.newContext();
-    // top 40
     const page = await context.newPage();
+    // top 40
     await page.goto(
         "https://www.gamejob.co.kr/Recruit/joblist?menucode=duty&duty=1",
     );
@@ -69,6 +69,7 @@ export const handler = async (event) => {
 };
 
 async function scrap(id, title, scrap_date) {
+    // startup
     console.log(`start: ${id}`); // DEBUG
     const browser = await playwright.launchChromium({ headless: true });
     const context = await browser.newContext();
@@ -87,6 +88,13 @@ async function scrap(id, title, scrap_date) {
     const location = await data.nth(0).textContent();
     const subway = await data.nth(1).textContent();
     // iframe height
+    await page.waitForFunction(() => {
+        return (
+            document
+                .querySelector("#GI_Work_Content")
+                .getAttribute("height") !== null
+        );
+    });
     const iframe_height = await page
         .locator("#GI_Work_Content")
         .getAttribute("height");

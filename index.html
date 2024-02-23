@@ -132,8 +132,6 @@
     }
     // assemble html
     function li(job) {
-        const category = job.category.trim().replace(/ \|$/, '');
-        const keywords = job.keywords.replace(/,$/, '').replaceAll(',', ', ');
         const modify_date = job.modify_date.split(' ')[1];
         const post_date = job.post_date.split(' ')[1];
         const qc = `<span class='qc'>id=${job.id} scrap=${job.scrap_date} modify=${modify_date} post=${post_date} height=${job.iframe_height} hide=${job.hidden}</span>`;

@@ -87,17 +87,6 @@
     'use strict';
     const style = getComputedStyle(document.body);
     const font_size = parseFloat(style.fontSize);
-    // zoom onload and onresize
-    function zoom() {
-        const max_scale = 1.5;
-        const max_width_rem = 56;
-        const dynamic_scale = Math.floor(
-            window.innerWidth / font_size / max_width_rem * 99) / 100;
-        document.body.style.scale =
-            Math.max(1, Math.min(max_scale, dynamic_scale));
-    }
-    //window.onload = zoom;
-    //window.onresize = zoom;
     // insert jobs
     const json_promise = fetch('/api/json').then(response => response.json());
     json_promise.then(json => {

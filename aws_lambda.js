@@ -80,10 +80,6 @@ async function scrap(id, title, scrap_date) {
     let data = page.locator("p.date");
     const modify_date = await data.nth(0).textContent();
     const post_date = await data.nth(1).textContent();
-    // category, keywords
-    data = page.locator("#gibOutline").locator("dl").locator("dd");
-    const category = await data.nth(0).textContent();
-    const keywords = await data.nth(1).textContent();
     // location, subway
     data = page
         .locator("dl", { has: page.getByText("근무지역") })
@@ -110,8 +106,6 @@ async function scrap(id, title, scrap_date) {
         scrap_date: scrap_date,
         modify_date: modify_date,
         post_date: post_date,
-        category: category,
-        keywords: keywords,
         location: location,
         subway: subway,
         iframe_height: iframe_height,

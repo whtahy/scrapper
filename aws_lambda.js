@@ -87,15 +87,9 @@ async function scrap(id, title, scrap_date) {
     const location = await data.nth(0).textContent();
     const subway = await data.nth(1).textContent();
     // iframe height
-    await page.waitForFunction(() => {
-        return (
-            document
-                .querySelector("#GI_Work_Content")
-                .getAttribute("height") !== null
-        );
-    });
-    data = page.locator("#GI_Work_Content");
-    const iframe_height = await data.getAttribute("height");
+    const iframe_height = await page
+        .locator("#GI_Work_Content")
+        .getAttribute("height");
     // cleanup
     await context.close();
     await browser.close();

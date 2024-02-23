@@ -1,7 +1,7 @@
 import * as playwright from "playwright-aws-lambda";
 import { kv } from "@vercel/kv";
 
-export const handler = async (event) => {
+export const handler = async event => {
     // startup
     console.log("start!");
     const browser = await playwright.launchChromium({ headless: true });
@@ -11,7 +11,7 @@ export const handler = async (event) => {
     await page.goto(
         "https://www.gamejob.co.kr/Recruit/joblist?menucode=duty&duty=1",
     );
-    console.log("done: goto"); // DEBUG
+    console.log("goto: top 40"); // DEBUG
     await page
         // 1. 추천순 = recommended
         // 2. 경력순 = sort by experience
@@ -27,7 +27,7 @@ export const handler = async (event) => {
         .locator("a")
         .all();
     const top_40_jobs = await Promise.all(
-        table.map(async (row) => {
+        table.map(async row => {
             const title = await row.textContent();
             const id = (await row.getAttribute("href")).split("=").pop();
             return { id: id, title: title };
@@ -35,26 +35,18 @@ export const handler = async (event) => {
     );
     console.log("done: top 40"); // DEBUG
     // filter new job ids
-    let json_jobs = await kv.get("json");
-    let json_ids, new_jobs;
-    if (json_jobs === null) {
-        json_jobs = [];
-        new_jobs = top_40_jobs;
-    } else {
-        json_ids = json_jobs.map((job) => job.id);
-        new_jobs = top_40_jobs.filter((job) => !json_ids.includes(job.id));
-    }
+    const json_jobs = await kv.get("json") ?? [];
+    const json_ids = json_jobs.map(job => job.id);
+    const new_jobs = top_40_jobs.filter(job => !json_ids.includes(job.id));
     console.log("new jobs: ", new_jobs);
     // update kv
     if (new_jobs.length > 0) {
         // add new jobs
         console.log(`adding ${new_jobs.length} jobs`); // DEBUG
         const scrap_date = timestamp();
-        await Promise.all(
-            new_jobs.map(async (job) => {
-                json_jobs.push(await scrap(job.id, job.title, scrap_date));
-            }),
-        );
+        for (const job of new_jobs) {
+            json_jobs.push(await scrap(job.id, job.title, scrap_date));
+        }
         // remove old jobs
         // console.log(`removing ${old_jobs.length} jobs`);
         // TODO: filter ... new Date(scrap_date) - ... > 12314123123
@@ -76,7 +68,9 @@ async function scrap(id, title, scrap_date) {
     const page = await context.newPage();
     await page.goto(
         `https://www.gamejob.co.kr/List_GI/GIB_Read.asp?GI_No=${id}`,
+        { waitUntil: "domcontentloaded" },
     );
+    console.log(`goto: ${id}`);
     // modify date, post date
     let data = page.locator("p.date");
     const modify_date = await data.nth(0).textContent();

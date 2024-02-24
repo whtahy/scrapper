@@ -3,15 +3,15 @@ import { kv } from "@vercel/kv";
 
 export const handler = async event => {
     // startup
-    console.log("start!");
+    console.log("start: top 40");
     const browser = await playwright.launchChromium({ headless: true });
     const context = await browser.newContext();
     const page = await context.newPage();
-    // top 40
     await page.goto(
         "https://www.gamejob.co.kr/Recruit/joblist?menucode=duty&duty=1",
     );
     console.log("goto: top 40"); // DEBUG
+    // sort table
     await page
         // 1. 추천순 = recommended
         // 2. 경력순 = sort by experience
@@ -21,6 +21,7 @@ export const handler = async event => {
         .getByRole("button", { name: "수정일순", exact: true })
         .first()
         .click();
+    // top 40
     const table = await page
         .getByRole("table")
         .locator("div.tit")
@@ -33,6 +34,9 @@ export const handler = async event => {
             return { id: id, title: title };
         }),
     );
+    // cleanup
+    await context.close();
+    await browser.close();
     console.log("done: top 40"); // DEBUG
     // filter new job ids
     const json_jobs = await kv.get("json") ?? [];
@@ -48,14 +52,11 @@ export const handler = async event => {
             json_jobs.push(await scrap(job.id, job.title, scrap_date));
         }
         // remove old jobs
-        // console.log(`removing ${old_jobs.length} jobs`);
-        // TODO: filter ... new Date(scrap_date) - ... > 12314123123
+        //console.log(`removing ${old_jobs.length} jobs`);
+        //TODO: filter ... new Date(scrap_date) - ... > 12314123123
         await kv.set("json", json_jobs);
         console.log("done: update kv"); // DEBUG
     }
-    // cleanup
-    await context.close();
-    await browser.close();
     console.log("done!"); // DEBUG
     return;
 };

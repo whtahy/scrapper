@@ -135,8 +135,9 @@
         const modify_date = job.modify_date.split(' ')[1];
         const post_date = job.post_date.split(' ')[1];
         const qc = `<span class='qc'>id=${job.id} scrap=${job.scrap_date} modify=${modify_date} post=${post_date} height=${job.iframe_height} hide=${job.hidden}</span>`;
+        const title = `<a target="_blank" rel="noopener noreferrer" href='https://gamejob.co.kr/List_GI/GIB_Read.asp?GI_No=${job.id}'>${job.title}</a>`;
         const iframe = `<iframe id='iframe_${job.id}' height='${job.iframe_height}' loading='lazy' scrolling='no' marginheight='0' marginwidth='0' src='https://gamejob.co.kr/Recruit/GI_Read_Comt_Ifrm?gno=${job.id}&v1'></iframe>`;
-        return `<li id='${job.id}' onclick='showhide(${job.id})'><a href='https://gamejob.co.kr/List_GI/GIB_Read.asp?GI_No=${job.id}'>${job.title}</a><br>${label('location')} ${job.location} ${label('subway')} ${job.subway}<br>${qc}<br>${iframe}</li>`;
+        return `<li id='${job.id}' onclick='showhide(${job.id})'>${title}<br>${label('location')} ${job.location} ${label('subway')} ${job.subway}<br>${qc}<br>${iframe}</li>`;
     }
     // grey labels
     function label(html) {

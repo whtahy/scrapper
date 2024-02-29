@@ -1,7 +1,7 @@
 import * as playwright from "playwright-aws-lambda";
 import { kv } from "@vercel/kv";
 
-export const handler = async event => {
+export const handler = async (event) => {
     // startup
     console.log("start: top 40");
     const browser = await playwright.launchChromium({ headless: true });
@@ -28,7 +28,7 @@ export const handler = async event => {
         .locator("a")
         .all();
     const top_40_jobs = await Promise.all(
-        table.map(async row => {
+        table.map(async (row) => {
             const title = await row.textContent();
             const id = (await row.getAttribute("href")).split("=").pop();
             return { id: id, title: title };
@@ -39,9 +39,9 @@ export const handler = async event => {
     await browser.close();
     console.log("done: top 40"); // DEBUG
     // filter new job ids
-    const json_jobs = await kv.get("json") ?? [];
-    const json_ids = json_jobs.map(job => job.id);
-    const new_jobs = top_40_jobs.filter(job => !json_ids.includes(job.id));
+    const json_jobs = (await kv.get("json")) ?? [];
+    const json_ids = json_jobs.map((job) => job.id);
+    const new_jobs = top_40_jobs.filter((job) => !json_ids.includes(job.id));
     console.log("new jobs: ", new_jobs);
     // update kv
     if (new_jobs.length > 0) {
@@ -72,16 +72,21 @@ async function scrap(id, title, scrap_date) {
         { waitUntil: "domcontentloaded" },
     );
     console.log(`goto: ${id}`);
+    // company
+    const company = await page
+        .locator("div.coInfoRight")
+        .locator("h2")
+        .textContent();
     // modify date, post date
-    let data = page.locator("p.date");
-    const modify_date = await data.nth(0).textContent();
-    const post_date = await data.nth(1).textContent();
+    let html = page.locator("p.date");
+    const modify_date = await html.nth(0).textContent();
+    const post_date = await html.nth(1).textContent();
     // location, subway
-    data = page
+    html = page
         .locator("dl", { has: page.getByText("근무지역") })
         .locator("dd");
-    const location = await data.nth(0).textContent();
-    const subway = await data.nth(1).textContent();
+    const location = await html.nth(0).textContent();
+    const subway = await html.nth(1).textContent();
     // iframe height
     await page.waitForFunction(() => {
         return (
@@ -99,14 +104,14 @@ async function scrap(id, title, scrap_date) {
     console.log(`done: ${id}`); // DEBUG
     return {
         id: id,
+        company: company,
         title: title,
+        location: location,
+        subway: subway,
         scrap_date: scrap_date,
         modify_date: modify_date,
         post_date: post_date,
-        location: location,
-        subway: subway,
         iframe_height: iframe_height,
-        hidden: false,
     };
 }
 

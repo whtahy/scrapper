@@ -5,4 +5,4 @@
 # Project
 1. `index.html` frontend html, css, js.
 2. `json.js` fetch json from vercel kv.
-3. `aws_lambda.js` playwright script using `playwright-aws-lambda`.
+3. `aws_lambda.js` backend playwright script using `playwright-aws-lambda`.

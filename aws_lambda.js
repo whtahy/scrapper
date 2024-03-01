@@ -69,7 +69,6 @@ async function scrap(id, title, scrap_date) {
     const page = await context.newPage();
     await page.goto(
         `https://www.gamejob.co.kr/List_GI/GIB_Read.asp?GI_No=${id}`,
-        { waitUntil: "domcontentloaded" },
     );
     console.log(`goto: ${id}`);
     // company

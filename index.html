@@ -130,6 +130,7 @@
     }
     // assemble html
     function li(job) {
+        job.hidden = false;
         const company = job.company.replace('㈜', '').trim();
         const modify_date = job.modify_date.split(' ')[1];
         const post_date = job.post_date.split(' ')[1];

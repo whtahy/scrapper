@@ -40,10 +40,14 @@
         border: 1px solid #7fdbca;
         padding: 3px;
         position: fixed;
-        width: 300px;
+        width: 400px;
     }
     #input_title {
-        bottom: 52px;
+        bottom: 90px;
+        right: 20px;
+    }
+    #input_company {
+        bottom: 55px;
         right: 20px;
     }
     #input_location {
@@ -77,8 +81,9 @@
 <body>
     <div class='sidebar'></div>
     <div>
-        <input id='input_title' type='text' placeholder='title' oninput='filter_title(this.value)'>
-        <input id='input_location' type='text' placeholder='location' oninput='filter_location(this.value)'>
+        <input id='input_title' type='text' placeholder='title' oninput='filter("filter_title", this.value)'>
+        <input id='input_company' type='text' placeholder='company' oninput='filter("filter_company", this.value)'>
+        <input id='input_location' type='text' placeholder='location' oninput='filter("filter_location", this.value)'>
         <ul></ul>
     </div>
     <div class='sidebar'></div>
@@ -88,12 +93,11 @@
     const style = getComputedStyle(document.body);
     const font_size = parseFloat(style.fontSize);
     window.onload = () => {
-        const t = localStorage.getItem('filter_title') ?? '';
-        document.getElementById('input_title').value = t;
-        filter_title(t);
-        const l = localStorage.getItem('filter_location') ?? '';
-        document.getElementById('input_location').value = l;
-        filter_location(l);
+        for (const x of ['company', 'title', 'location']) {
+            const cookie = localStorage.getItem(`filter_${x}`) ?? '';
+            document.getElementById(`input_${x}`).value = cookie;
+            filter(`filter_${x}`, cookie);
+        }
     };
     // insert jobs
     const json_promise = fetch('/api/json').then(response => response.json());
@@ -102,32 +106,26 @@
             json.reverse().map(job => li(job)).join('');
     });
     // filters
-    function filter_title(input) {
-        localStorage.setItem('filter_title', input);
+    function filter(name, input) {
+        localStorage.setItem(name, input);
         const todo = input.split('|').filter(x => x !== '');
         json_promise.then(json => {
             json.forEach(job => {
                 const li = document.getElementById(`li_${job.id}`);
-                if (todo.some(x => job.title.includes(x))) {
+                let job_data;
+                if (name === 'filter_company') {
+                    job_data = job.company;
+                } else if (name === 'filter_title') {
+                    job_data = job.title;
+                } else if (name === 'filter_location') {
+                    job_data = job.location;
+                }
+                if (todo.some(x => job_data.includes(x))) {
                     li.style.display = 'none';
                 } else {
                     li.style.display = 'block';
                 }
-            })
-        });
-    }
-    function filter_location(input) {
-        localStorage.setItem('filter_location', input);
-        const todo = input.split('|').filter(x => x !== '');
-        json_promise.then(json => {
-            json.forEach(job => {
-                const li = document.getElementById(`li_${job.id}`);
-                if (todo.some(x => job.location.includes(x))) {
-                    li.style.display = 'none';
-                } else {
-                    li.style.display = 'block';
-                }
-            })
+            });
         });
     }
     // assemble html

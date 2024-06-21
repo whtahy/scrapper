@@ -49,7 +49,21 @@ export const handler = async (event) => {
         console.log(`adding ${new_jobs.length} jobs`); // DEBUG
         const scrap_date = timestamp();
         for (const job of new_jobs) {
-            json_jobs.push(await scrap(job.id, job.title, scrap_date));
+            try {
+                json_jobs.push(await scrap(job.id, job.title, scrap_date));
+            } catch {
+                json_jobs.push({
+                    id: job.id,
+                    company: "error",
+                    title: job.title,
+                    location: "error",
+                    subway: "error",
+                    scrap_date: scrap_date,
+                    modify_date: "error",
+                    post_date: "error",
+                    iframe_height: 500,
+                })
+            }
         }
         // remove old jobs
         //console.log(`removing ${old_jobs.length} jobs`);
